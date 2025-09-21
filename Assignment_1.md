@@ -32,7 +32,11 @@
     | `m5.large`  |410.89 events/sec|5268.12 MiB/sec|
     | `c5d.large` |477.25 events/sec|6134.44 MiB/sec|
 
-    > The CPU performance of c5d.large is the best, followed by m5.large, and t3.medium is the worst. The memory performance of c5d.large is also the best, followed by m5.large, and t3.medium is the worst. 
+    > The CPU performance of c5d.large is the best, followed by m5.large, and t3.medium is the worst. The memory performance of c5d.large is also the best, followed by m5.large, and t3.medium is the worst. T3.Medium, m5.Large, c5d.Large...They're not random tags. These are three different resource allocation models designed by AWS. It's all based on virtualization: the Hypervisor splits up virtual machines into performance ratios based on the type of physical hardware you choose.
+    > c5d.large: The c5 series is a compute-optimized instance type, designed for high-performance computing tasks. It uses the latest Intel Xeon Scalable processors, which provide higher clock speeds and more cores compared to the other two types. This results in better CPU performance.
+    > m5.large: The m5 series is a general-purpose instance type, which balances compute, memory, and networking resources. It uses Intel Xeon Platinum processors, which are powerful but not as optimized for compute-intensive tasks as the c5 series. This results in moderate CPU performance.
+    > t3.medium: The t3 series is a burstable performance instance type, which is not linearly related to CPU performance. It is designed for workloads that do not require consistent high CPU performance, such as web servers and small databases. The CPU performance can vary based on the workload, but its basic physical hardware and persistent performance design are still inferior to those of the M5 and C5D series. As a result, it has the lowest ranking (375.38 events/sec, 5237.69 MiB/sec) 
+
 
 ## Question 2: Measure the EC2 Network performance
 
