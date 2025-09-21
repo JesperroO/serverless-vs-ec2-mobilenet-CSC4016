@@ -44,21 +44,28 @@
 
     | Type          | TCP b/w (Mbps) | RTT (ms) |
     |---------------|----------------|----------|
-    | `t3.medium`-`t3.medium` |                |          |
-    | `m5.large`-`m5.large`  |                |          |
-    | `c5n.large`-`c5n.large` |                |          |
-    | `t3.medium`-`c5n.large`   |                |          |
-    | `m5.large`-`c5n.large`  |                |          |
-    | `m5.large`-`t3.medium` |                |          |
+    | `t3.medium`-`t3.medium` |4.54 Gbits/sec|0.307 ms|
+    | `m5.large`-`m5.large`  |4.95 Gbits/sec|0.371 ms|
+    | `c5n.large`-`c5n.large` |4.96 Gbits/sec|0.372 ms|
+    | `t3.medium`-`c5n.large`   |4.48 Gbits/sec|0.425 ms|
+    | `m5.large`-`c5n.large`  |4.75 Gbits/sec|0.384 ms|
+    | `m5.large`-`t3.medium` |4.46 Gbits/sec|0.432 ms|
 
-    > Region: US East (N. Virginia)
+    > The network performance is excellent between instances of the same type, with high bandwidth and low latency. The performance is slightly lower between instances of different types, but still very good. This is because instances of the same type are likely to be on the same physical hardware or in close proximity within the data center, resulting in lower latency and higher bandwidth. Instances of different types may be on different hardware or in different locations within the data center, leading to slightly higher latency and lower bandwidth.
 
 2. (1 mark) What about the network performance for instances deployed in different regions? In order to answer this question, you need to complete the following table.
 
     | Connection | TCP b/w (Mbps)  | RTT (ms) |
     |------------|-----------------|--------------------|
-    | N. Virginia-Oregon |                 |                    |
-    | N. Virginia-N. Virginia  |                 |                    |
-    | Oregon-Oregon |                 |                    |
+    | N. Virginia-Oregon |0.481 Gbits/sec|61.188ms|
+    | N. Virginia-N. Virginia  |4.96 Gbits/sec|0.176ms|
+    | Oregon-Oregon |9.53 Gbits/sec|0.025ms|
 
-    > All instances are `c5.large`.
+    > Regarding RTT (61.188ms vs. ~0.2ms):
+    > This huge difference originates from the fundamental limitations of physics: the speed of light.
+    > Data packets traveling through fiber optic cables from N. Virginia to Oregon and back need to traverse thousands of kilometers of physical distance, which costs tens of milliseconds.
+    > While intra-regional communication may only involve distances of tens of meters, resulting in sub-millisecond latency.
+
+    > Regarding bandwidth (481 Mbits/sec vs. ~5-9 Gbits/sec):
+    > Inter-regional links are shared, expensive, long-haul backbone networks that need to handle traffic from thousands of users. Therefore, the bandwidth you can be allocated is limited.
+    > Intra-regional links are dedicated, ultra-high bandwidth networks within data centers. Hence, the bandwidth is more than an order of magnitude higher.

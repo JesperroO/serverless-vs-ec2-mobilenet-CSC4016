@@ -1,0 +1,17 @@
+sudo apt update
+sudo apt install iperf
+iperf -s
+iperf -c <服務器的Private-IPv4-address>
+
+t3.medium.2: 172.31.20.165    
+
+ping -c 4 <服務器的Private-IPv4-address>
+
+ubuntu@ip-172-31-30-84:~$ iperf -c 172.31.20.165    
+------------------------------------------------------------
+Client connecting to 172.31.20.165, TCP port 5001
+TCP window size: 16.0 KByte (default)
+------------------------------------------------------------
+[  1] local 172.31.30.84 port 35876 connected with 172.31.20.165 port 5001 (icwnd/mss/irtt=87/8949/857)
+[ ID] Interval       Transfer     Bandwidth
+[  1] 0.0000-10.0136 sec  5.29 GBytes  4.54 Gbits/sec

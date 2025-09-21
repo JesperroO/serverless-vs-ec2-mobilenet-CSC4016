@@ -1,4 +1,4 @@
-ssh -i "labsuser.pem" ubuntu@ec2-3-90-183-87.compute-1.amazonaws.com
+ssh -i "labsuser.pem" ubuntu@13.217.198.67
 ssh -i "labsuser.pem" ubuntu@ec2-52-87-173-75.compute-1.amazonaws.com
 ssh -i "labsuser.pem" ubuntu@ec2-54-221-187-248.compute-1.amazonaws.com
 
