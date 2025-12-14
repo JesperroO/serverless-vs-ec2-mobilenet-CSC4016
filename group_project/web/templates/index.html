@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Demo: Cost-Performance Comparison for AI Model Serving on AWS</title>
+    <style>
+        body {
+            margin: 40px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+            background-color: #f5f5f7;
+            color: #222;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+        .form-card {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 16px 20px;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+            margin-bottom: 24px;
+        }
+        .form-row {
+            margin-bottom: 12px;
+        }
+        label {
+            display: inline-block;
+            min-width: 110px;
+            font-weight: 500;
+        }
+        input[type="file"],
+        select {
+            font-size: 14px;
+        }
+        button {
+            padding: 6px 16px;
+            font-size: 14px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            background-color: #2563eb;
+            color: #ffffff;
+        }
+        button:hover {
+            background-color: #1d4ed8;
+        }
+        .messages {
+            color: #b91c1c;
+            margin-bottom: 8px;
+        }
+        .result-container {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+        .panel {
+            flex: 1;
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 16px 20px;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+        }
+        .panel h2 {
+            font-size: 18px;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        .panel h3 {
+            font-size: 15px;
+            margin-top: 12px;
+            margin-bottom: 6px;
+        }
+        .result-image {
+            width: 100%;
+            max-height: 260px;
+            object-fit: contain;
+            border-radius: 4px;
+            border: 1px solid #e5e7eb;
+            background-color: #f9fafb;
+            margin-bottom: 8px;
+        }
+        .small {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            background-color: #e5e7eb;
+            color: #374151;
+            margin-left: 4px;
+        }
+        .badge.fake {
+            background-color: #e0f2fe;
+            color: #0369a1;
+        }
+        .metrics p {
+            margin: 2px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Demo: Cost-Performance Comparison for AI Model Serving on AWS</h1>
+    <div class="subtitle">
+        Single-image demo for our AWS serving benchmark:
+        compare live inference behavior with pre-computed latency/throughput/cost across different backends.
+    </div>
+
+    <div class="form-card">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="messages">
+                {% for msg in messages %}
+                    <div>{{ msg }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('infer') }}" method="post" enctype="multipart/form-data">
+            <div class="form-row">
+                <label for="image">Upload image:</label>
+                <input type="file" id="image" name="image" accept="image/*" required>
+            </div>
+            <div class="form-row">
+                <label for="backend">Select backend:</label>
+                <select id="backend" name="backend">
+                    {% for key, cfg in backends.items() %}
+                        <option value="{{ key }}"
+                            {% if selected_backend == key %}selected{% endif %}>
+                            {{ cfg.label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-row">
+                <label></label>
+                <button type="submit">Run inference</button>
+            </div>
+        </form>
+    </div>
+
+    {% if result %}
+    <div class="result-container">
+        <!-- Left: real-time output for this request -->
+        <div class="panel">
+            <h2>Real-time output</h2>
+            <div class="small">
+                Current backend: {{ result.backend }}
+                {% if result.is_fake %}
+                    <span class="badge fake">Benchmark metrics only</span>
+                {% else %}
+                    <span class="badge">Live request</span>
+                {% endif %}
+            </div>
+
+            {% if image_data_uri %}
+                <img src="{{ image_data_uri }}" alt="uploaded image" class="result-image">
+            {% else %}
+                <div class="result-image"></div>
+            {% endif %}
+
+            <h3>Prediction</h3>
+            <p>Predicted label: <strong>{{ result.prediction }}</strong></p>
+
+            <h3>Latency for this request</h3>
+            <p class="metrics">
+                {% if result.rt_latency_ms is defined %}
+                    End-to-end latency:
+                    <strong>{{ '%.2f'|format(result.rt_latency_ms) }} ms</strong>
+                {% else %}
+                    End-to-end latency: <strong>N/A</strong>
+                {% endif %}
+            </p>
+        </div>
+
+        <!-- Right: benchmark metrics -->
+        <div class="panel">
+            <h2>Benchmark overview</h2>
+            <div class="small">
+                Metrics derived from our batch benchmarks
+                (e.g., mode=duration, concurrency=8) stored in summary.csv.
+            </div>
+
+            <h3>Average performance</h3>
+            <div class="metrics">
+                <p>
+                    Average latency:
+                    {% if result.bench_latency_ms is not none %}
+                        <strong>{{ '%.2f'|format(result.bench_latency_ms) }} ms</strong>
+                    {% else %}
+                        <strong>N/A</strong>
+                    {% endif %}
+                </p>
+                <p>
+                    Average throughput:
+                    {% if result.bench_ips is not none %}
+                        <strong>{{ '%.2f'|format(result.bench_ips) }} IPS</strong>
+                    {% else %}
+                        <strong>N/A</strong>
+                    {% endif %}
+                </p>
+            </div>
+
+            <h3>Cost per 1M inferences</h3>
+            <div class="metrics">
+                <p>
+                    Cost per 1M:
+                    {% if result.bench_cost_per_1m is not none %}
+                        <strong>${{ '%.2f'|format(result.bench_cost_per_1m) }}</strong>
+                    {% else %}
+                        <strong>N/A</strong>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</body>
+</html>
